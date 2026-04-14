@@ -4,21 +4,28 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, asdict
 from pathlib import Path
 from playwright.sync_api import sync_playwright, TimeoutError as PwTimeout
 
 BASE = "https://www.lidl.bg"
 
+# Use /h/ subcategory URLs — /c/ category pages are hubs without product cards.
 FOOD_CATEGORIES = {
-    "Плодове и зеленчуци": "/c/plodove-i-zelenchutsi/s10020754",
+    "Плодове и зеленчуци": "/h/plodove-i-zelenchutsi/h10071012",
     "Прясно месо": "/h/pryasno-meso/h10071016",
     "Риба и морски дарове": "/h/riba-i-morski-darove/h10071050",
     "Мляко и млечни продукти": "/h/mlyako-mlechni-produkti/h10071017",
     "Хляб и тестени изделия": "/h/khlyab-i-testeni-izdeliya/h10071015",
+    "Основни храни": "/h/osnovni-khrani/h10071045",
     "Замразени продукти": "/h/zamrazeni-produkti/h10071049",
+    "Охладени продукти": "/h/okhladeni-produkti/h10071020",
+    "Деликатеси": "/h/delikatesi/h10071680",
     "Кафе и чай": "/h/kafe-i-chay/h10071683",
     "Консервирани храни": "/h/konservirani-khrani/h10071681",
+    "Подправки и сосове": "/h/podpravki-i-sosove/h10071682",
+    "Напитки": "/h/napitki/h10071022",
+    "Снаксове и сладки": "/h/snaksove-i-sladki-izkusheniya/h10071044",
     "Акция": "/c/aktsiya/a10092267",
     "Трайно ниски цени": "/c/trayno-niski-tseni/a10085720",
 }
@@ -57,36 +64,27 @@ def clean_price(raw: str) -> str:
 
 
 def parse_prices(raw_price: str, raw_old: str) -> tuple[str, str]:
-    """Parse the raw price blob into (current_price, old_price).
+    """Parse price fields into (current_price, old_price).
 
-    Lidl's scraped price field often looks like:
-      '6.99 € (13.67 ЛВ.)\\n-30%\\n4.89€*\\n9.56ЛВ.*\\n200 g/опаковка'
-    The first price is the original, and the one after АКЦИЯ / % / Lidl Plus
-    is the actual discounted price.
+    Handles two formats:
+    - New (clean): price="1.89€*", old_price="4.29 € (8.39 ЛВ.)"
+    - Old (blob):  price="6.99 € (13.67 ЛВ.)\\n-30%\\n4.89€*\\n..." old_price="6.99 € ..."
     """
-    if not raw_price:
-        return clean_price(raw_old), ""
+    current = clean_price(raw_price)
+    old = clean_price(raw_old)
 
-    # Find all EUR prices in the blob (e.g. "6.99 €", "4.89€*")
-    all_eur = re.findall(r"(\d+[.,]\d{2})\s*€", raw_price)
-
-    if len(all_eur) >= 2:
-        # Has promo: first = old price, second = current price
-        old = all_eur[0] + " €"
-        current = all_eur[1] + " €"
+    # If both are set and different, we're done (new clean format)
+    if current and old and current != old:
         return current, old
 
-    if len(all_eur) == 1:
-        return all_eur[0] + " €", ""
+    # If same or only one set, try the old blob format
+    if raw_price and "\n" in raw_price:
+        all_eur = re.findall(r"(\d+[.,]\d{2})\s*€", raw_price)
+        if len(all_eur) >= 2:
+            return all_eur[1] + " €", all_eur[0] + " €"
 
-    # Fallback to лв.
-    all_lv = re.findall(r"(\d+[.,]\d{2})\s*[Лл][Вв]", raw_price)
-    if len(all_lv) >= 2:
-        return all_lv[1] + " лв.", all_lv[0] + " лв."
-    if len(all_lv) == 1:
-        return all_lv[0] + " лв.", ""
-
-    return clean_price(raw_price), ""
+    # No old price
+    return current, "" if current == old else old
 
 
 def _accept_cookies(page) -> None:
@@ -94,142 +92,112 @@ def _accept_cookies(page) -> None:
         btn = page.locator("button:has-text('Приемам'), button:has-text('Accept')")
         if btn.count() > 0:
             btn.first.click(timeout=3000)
+            page.wait_for_timeout(500)
     except Exception:
         pass
+
+
+def _scroll_to_load_all(page) -> None:
+    """Scroll down the page to trigger lazy-loading of product tiles."""
+    prev_count = 0
+    for step in range(20):
+        page.evaluate(f"window.scrollTo(0, {(step + 1) * 800})")
+        page.wait_for_timeout(600)
+        count = page.locator(".product-grid-box").count()
+        if count == prev_count and step > 2:
+            break
+        prev_count = count
+
+    # Also click "load more" if present and not fully loaded
+    for _ in range(10):
+        try:
+            counter = page.locator(".s-load-more")
+            if counter.count() > 0:
+                text = counter.first.inner_text()
+                m = re.search(r"(\d+)\s*/\s*(\d+)", text)
+                if m and m.group(1) == m.group(2):
+                    break
+            btn = page.locator("[class*='load-more'] button, button:has-text('Зареди още')")
+            if btn.count() == 0 or not btn.first.is_visible():
+                break
+            btn.first.scroll_into_view_if_needed()
+            btn.first.click(timeout=5000)
+            page.wait_for_timeout(2000)
+            # Scroll again after load more
+            for s in range(5):
+                page.evaluate(f"window.scrollTo(0, {(s + 1) * 800})")
+                page.wait_for_timeout(600)
+        except Exception:
+            break
+
+    # Scroll back to top
+    page.evaluate("window.scrollTo(0, 0)")
 
 
 def _extract_products(page) -> list[Product]:
     """Extract product cards from the currently loaded page."""
+    _scroll_to_load_all(page)
+
+    cards = page.locator(".product-grid-box")
+    if cards.count() == 0:
+        return []
+
     products: list[Product] = []
-
-    # Try to load all products by clicking "load more" repeatedly
-    for _ in range(10):
-        try:
-            load_more = page.locator(
-                "button:has-text('Зареди още'), "
-                "button:has-text('Load more'), "
-                "a:has-text('Зареди още')"
-            )
-            if load_more.count() > 0 and load_more.first.is_visible():
-                load_more.first.click(timeout=5000)
-                page.wait_for_timeout(1500)
-            else:
-                break
-        except Exception:
-            break
-
-    # Extract from product grid items - Lidl uses various card selectors
-    selectors = [
-        "article[class*='product']",
-        "[class*='ProductGrid'] [class*='product']",
-        "[data-grid-box]",
-        ".product-grid-box",
-        "[class*='AProductGridBox']",
-        ".ret-o-card",
-        "[class*='OfferCard']",
-        "[class*='ret-o-tile']",
-    ]
-
-    cards = None
-    for sel in selectors:
-        cards = page.locator(sel)
-        if cards.count() > 0:
-            break
-
-    if not cards or cards.count() == 0:
-        # Fallback: grab any element that looks like a product card
-        cards = page.locator("[class*='grid'] a[href*='/p/']")
-        if cards.count() == 0:
-            # Last resort: look for price elements and work upwards
-            return _extract_from_structured_data(page)
 
     for i in range(cards.count()):
         card = cards.nth(i)
         try:
+            # Name — from the tile link
             name = ""
-            price = ""
-            old_price = ""
-            url = ""
-
-            # Name
-            for name_sel in [
-                "[class*='product-title']", "[class*='ProductTitle']",
-                "[class*='name']", "h3", "h2", "[class*='title']",
-                "[class*='Title']",
-            ]:
-                el = card.locator(name_sel)
-                if el.count() > 0:
-                    name = el.first.inner_text().strip()
-                    if name:
-                        break
+            name_el = card.locator(".odsc-tile__link")
+            if name_el.count() > 0:
+                name = name_el.first.inner_text().strip()
 
             if not name:
-                name = card.inner_text().strip().split("\n")[0]
-
-            # Price
-            for price_sel in [
-                "[class*='price']", "[class*='Price']",
-                "[class*='pricebox']",
-            ]:
-                el = card.locator(price_sel)
-                if el.count() > 0:
-                    price_text = el.first.inner_text().strip()
-                    if price_text:
-                        price = price_text
-                        break
-
-            # Old price (strikethrough)
-            for old_sel in [
-                "[class*='strikethrough']", "[class*='oldprice']",
-                "[class*='OldPrice']", "del", "s",
-            ]:
-                el = card.locator(old_sel)
-                if el.count() > 0:
-                    old_price = el.first.inner_text().strip()
-                    break
+                continue
 
             # URL
-            link = card.locator("a[href]")
+            url = ""
+            link = card.locator("a[href*='/p/']")
             if link.count() > 0:
                 href = link.first.get_attribute("href") or ""
                 url = href if href.startswith("http") else BASE + href
 
-            if name and len(name) > 1:
-                products.append(Product(
-                    name=name[:200],
-                    price=price,
-                    old_price=old_price,
-                    url=url,
-                ))
+            # Old price — strikethrough element
+            old_price = ""
+            old_el = card.locator(".ods-price__stroke-price s")
+            if old_el.count() > 0:
+                old_price = old_el.first.inner_text().strip()
+
+            # Current price — the .ods-price__value element (first one with €)
+            price = ""
+            val_els = card.locator(".ods-price__value")
+            for j in range(val_els.count()):
+                text = val_els.nth(j).inner_text().strip()
+                if "€" in text:
+                    price = text
+                    break
+
+            # If no EUR price found, take the first value
+            if not price and val_els.count() > 0:
+                price = val_els.first.inner_text().strip()
+
+            # Weight / unit info from footer
+            weight = ""
+            footer = card.locator(".ods-price__footer")
+            if footer.count() > 0:
+                weight = footer.first.inner_text().strip()
+
+            products.append(Product(
+                name=name[:200],
+                price=price,
+                old_price=old_price,
+                weight=weight,
+                url=url,
+            ))
         except Exception:
             continue
 
-    return products
-
-
-def _extract_from_structured_data(page) -> list[Product]:
-    """Try to extract product data from JSON-LD or script tags."""
-    products = []
-    try:
-        scripts = page.locator("script[type='application/ld+json']")
-        for i in range(scripts.count()):
-            data = json.loads(scripts.nth(i).inner_text())
-            if isinstance(data, list):
-                for item in data:
-                    if item.get("@type") == "Product":
-                        products.append(Product(
-                            name=item.get("name", ""),
-                            price=str(item.get("offers", {}).get("price", "")),
-                            url=item.get("url", ""),
-                        ))
-            elif isinstance(data, dict) and data.get("@type") == "Product":
-                products.append(Product(
-                    name=data.get("name", ""),
-                    price=str(data.get("offers", {}).get("price", "")),
-                    url=data.get("url", ""),
-                ))
-    except Exception:
-        pass
     return products
 
 
@@ -272,15 +240,12 @@ def scrape(
 
             url = BASE + path
             try:
-                page.goto(url, timeout=30000, wait_until="networkidle")
+                page.goto(url, timeout=30000, wait_until="domcontentloaded")
             except PwTimeout:
-                try:
-                    page.goto(url, timeout=30000, wait_until="domcontentloaded")
-                except Exception:
-                    continue
+                continue
 
             _accept_cookies(page)
-            page.wait_for_timeout(2000)
+            page.wait_for_timeout(3000)
 
             products = _extract_products(page)
             for p in products:

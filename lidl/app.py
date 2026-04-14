@@ -44,11 +44,14 @@ def api_products():
 
     results = []
     for sp in ranked:
+        # For old cached data, parse_prices handles the messy blob.
+        # For new data, prices are already clean but parse_prices still works.
         current, old = parse_prices(sp.product.price, sp.product.old_price)
         results.append({
             "name": sp.product.name,
             "price": current,
             "old_price": old,
+            "weight": sp.product.weight,
             "category": sp.product.category,
             "url": sp.product.url,
             "score": sp.score,
