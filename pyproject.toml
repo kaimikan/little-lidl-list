@@ -1,0 +1,12 @@
+[project]
+name = "little-lidl-list"
+version = "0.1.0"
+description = "Scan Lidl Bulgaria offers for healthy items suited for a training man"
+requires-python = ">=3.10"
+dependencies = [
+    "playwright>=1.40",
+    "rich>=13.0",
+]
+
+[project.scripts]
+lidl = "lidl.cli:main"
