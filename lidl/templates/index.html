@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Little Lidl List</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">🛒</span>
+                <div>
+                    <h1>Little Lidl List</h1>
+                    <p class="subtitle">Healthy picks for training — Lidl Bulgaria</p>
+                </div>
+            </div>
+            <button id="scan-btn" class="btn-scan" onclick="startScan()">
+                <span class="btn-icon">⟳</span> Scan Now
+            </button>
+        </div>
+    </header>
+
+    <div id="scan-banner" class="scan-banner hidden">
+        <div class="scan-spinner"></div>
+        <span id="scan-message">Scanning Lidl Bulgaria...</span>
+    </div>
+
+    <main>
+        <div class="controls">
+            <div class="control-group">
+                <label>Min Score</label>
+                <div class="score-slider">
+                    <input type="range" id="min-score" min="1" max="15" value="1" oninput="onFilterChange()">
+                    <span id="min-score-val" class="slider-val">1</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Category</label>
+                <select id="category-filter" onchange="onFilterChange()">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Tags</label>
+                <div id="tag-filters" class="tag-filters">
+                    <button class="tag-btn active" data-tag="" onclick="toggleTag(this)">All</button>
+                    <button class="tag-btn" data-tag="protein" onclick="toggleTag(this)">Protein</button>
+                    <button class="tag-btn" data-tag="carbs" onclick="toggleTag(this)">Carbs</button>
+                    <button class="tag-btn" data-tag="healthy_fat" onclick="toggleTag(this)">Healthy Fat</button>
+                    <button class="tag-btn" data-tag="vegetable" onclick="toggleTag(this)">Vegetable</button>
+                    <button class="tag-btn" data-tag="fruit" onclick="toggleTag(this)">Fruit</button>
+                    <button class="tag-btn" data-tag="supplement" onclick="toggleTag(this)">Supplement</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <span id="stats-text">Loading...</span>
+        </div>
+
+        <div id="products-grid" class="products-grid">
+            <!-- Products rendered here -->
+        </div>
+
+        <div id="empty-state" class="empty-state hidden">
+            <div class="empty-icon">📋</div>
+            <h2>No products found</h2>
+            <p>Try lowering the minimum score or click <strong>Scan Now</strong> to fetch fresh data.</p>
+        </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

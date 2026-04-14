@@ -41,10 +41,9 @@ class Product:
 
 
 def clean_price(raw: str) -> str:
-    """Extract the first price-like string from messy scraped text."""
+    """Extract the first EUR price from messy scraped text."""
     if not raw:
         return ""
-    # Look for patterns like "3.47 €", "3.47€", "6.79 ЛВ.", "6.79ЛВ."
     m = re.search(r"(\d+[.,]\d{2})\s*€", raw)
     if m:
         return m.group(1) + " €"
@@ -55,6 +54,39 @@ def clean_price(raw: str) -> str:
     if m:
         return m.group(1)
     return raw.strip()[:20]
+
+
+def parse_prices(raw_price: str, raw_old: str) -> tuple[str, str]:
+    """Parse the raw price blob into (current_price, old_price).
+
+    Lidl's scraped price field often looks like:
+      '6.99 € (13.67 ЛВ.)\\n-30%\\n4.89€*\\n9.56ЛВ.*\\n200 g/опаковка'
+    The first price is the original, and the one after АКЦИЯ / % / Lidl Plus
+    is the actual discounted price.
+    """
+    if not raw_price:
+        return clean_price(raw_old), ""
+
+    # Find all EUR prices in the blob (e.g. "6.99 €", "4.89€*")
+    all_eur = re.findall(r"(\d+[.,]\d{2})\s*€", raw_price)
+
+    if len(all_eur) >= 2:
+        # Has promo: first = old price, second = current price
+        old = all_eur[0] + " €"
+        current = all_eur[1] + " €"
+        return current, old
+
+    if len(all_eur) == 1:
+        return all_eur[0] + " €", ""
+
+    # Fallback to лв.
+    all_lv = re.findall(r"(\d+[.,]\d{2})\s*[Лл][Вв]", raw_price)
+    if len(all_lv) >= 2:
+        return all_lv[1] + " лв.", all_lv[0] + " лв."
+    if len(all_lv) == 1:
+        return all_lv[0] + " лв.", ""
+
+    return clean_price(raw_price), ""
 
 
 def _accept_cookies(page) -> None:
