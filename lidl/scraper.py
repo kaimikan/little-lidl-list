@@ -188,12 +188,19 @@ def _extract_products(page) -> list[Product]:
             if footer.count() > 0:
                 weight = footer.first.inner_text().strip()
 
+            # Product image
+            image_url = ""
+            img_el = card.locator(".odsc-image-gallery__image")
+            if img_el.count() > 0:
+                image_url = img_el.first.get_attribute("src") or ""
+
             products.append(Product(
                 name=name[:200],
                 price=price,
                 old_price=old_price,
                 weight=weight,
                 url=url,
+                image_url=image_url,
             ))
         except Exception:
             continue

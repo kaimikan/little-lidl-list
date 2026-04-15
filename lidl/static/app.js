@@ -4,9 +4,23 @@ let activeTag = "";
 
 // ── Init ─────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
+    loadTheme();
     loadCategories();
     loadProducts();
 });
+
+// ── Theme ────────────────────────────────────────────────
+function loadTheme() {
+    const saved = localStorage.getItem("lidl-theme") || "light";
+    document.body.className = "theme-" + saved;
+}
+
+function toggleTheme() {
+    const isLight = document.body.classList.contains("theme-light");
+    const next = isLight ? "dark" : "light";
+    document.body.className = "theme-" + next;
+    localStorage.setItem("lidl-theme", next);
+}
 
 // ── API Calls ────────────────────────────────────────────
 async function loadCategories() {
@@ -68,36 +82,53 @@ function renderProducts() {
             ? `<span class="old-price">${escHtml(p.old_price)}</span>`
             : "";
 
+        const weightHtml = p.weight
+            ? `<span class="weight-label">${escHtml(p.weight)}</span>`
+            : "";
+
         const tagsHtml = p.tags
             .map(t => `<span class="tag tag-${t}">${t.replace("_", " ")}</span>`)
             .join("");
 
+        const imageHtml = p.image_url
+            ? `<img src="${escHtml(p.image_url)}" alt="${escHtml(p.name)}" loading="lazy">`
+            : `<div class="card-image-placeholder">&#127860;</div>`;
+
         const clickAttr = p.url
-            ? `onclick="window.open('${escHtml(p.url)}', '_blank')" style="cursor:pointer; animation: fadeIn 0.3s ease ${i * 0.03}s both"`
-            : `style="animation: fadeIn 0.3s ease ${i * 0.03}s both"`;
+            ? `onclick="window.open('${escHtml(p.url)}', '_blank')" style="cursor:pointer;"`
+            : "";
 
         return `
-            <div class="product-card score-${scoreClass}" ${clickAttr}>
-                <div class="card-header">
-                    <div class="product-name">${escHtml(p.name)}</div>
-                    <div class="score-badge ${scoreClass}">
-                        <span>★</span> ${p.score}
+            <div class="product-card score-${scoreClass} fade-in" ${clickAttr}>
+                <div class="card-image">${imageHtml}</div>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="product-name">${escHtml(p.name)}</div>
+                        <div class="score-badge ${scoreClass}">
+                            <span>&#9733;</span> ${p.score}
+                        </div>
                     </div>
-                </div>
-                <div class="score-bar-container">
-                    <div class="score-bar ${scoreClass}" style="width: ${barWidth}%"></div>
-                </div>
-                <div class="card-body">
-                    <div class="price-block">
-                        <span class="price">${escHtml(p.price || "—")}</span>
-                        ${oldPriceHtml}
+                    <div class="score-bar-container">
+                        <div class="score-bar ${scoreClass}" style="width: ${barWidth}%"></div>
                     </div>
-                    <span class="category-label">${escHtml(p.category)}</span>
+                    <div class="card-body">
+                        <div class="price-block">
+                            <span class="price">${escHtml(p.price || "\u2014")}</span>
+                            ${oldPriceHtml}
+                            ${weightHtml}
+                        </div>
+                        <span class="category-label">${escHtml(p.category)}</span>
+                    </div>
+                    <div class="card-tags">${tagsHtml}</div>
                 </div>
-                <div class="card-tags">${tagsHtml}</div>
             </div>
         `;
     }).join("");
+
+    // Stagger fade-in animations
+    grid.querySelectorAll(".fade-in").forEach((el, i) => {
+        el.style.animationDelay = `${i * 0.03}s`;
+    });
 }
 
 // ── Filters ──────────────────────────────────────────────
@@ -159,8 +190,11 @@ function escHtml(str) {
 const style = document.createElement("style");
 style.textContent = `
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
+        from { opacity: 0; transform: translateY(8px); }
         to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in {
+        animation: fadeIn 0.3s ease both;
     }
 `;
 document.head.appendChild(style);

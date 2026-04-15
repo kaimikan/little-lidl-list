@@ -54,6 +54,7 @@ def api_products():
             "weight": sp.product.weight,
             "category": sp.product.category,
             "url": sp.product.url,
+            "image_url": sp.product.image_url,
             "score": sp.score,
             "tags": sp.tags,
             "reason": sp.reason,

@@ -6,19 +6,29 @@
     <title>Little Lidl List</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
-<body>
+<body class="theme-light">
     <header>
         <div class="header-content">
             <div class="logo">
-                <span class="logo-icon">🛒</span>
+                <svg class="logo-icon" viewBox="0 0 40 40" width="40" height="40">
+                    <rect width="40" height="40" rx="8" fill="#0050AA"/>
+                    <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle"
+                          fill="#FFF200" font-size="20" font-weight="900">L</text>
+                </svg>
                 <div>
                     <h1>Little Lidl List</h1>
-                    <p class="subtitle">Healthy picks for training — Lidl Bulgaria</p>
+                    <p class="subtitle">Healthy picks for training &mdash; Lidl Bulgaria</p>
                 </div>
             </div>
-            <button id="scan-btn" class="btn-scan" onclick="startScan()">
-                <span class="btn-icon">⟳</span> Scan Now
-            </button>
+            <div class="header-actions">
+                <button id="theme-toggle" class="btn-theme" onclick="toggleTheme()" title="Toggle theme">
+                    <span class="theme-icon-light">&#9789;</span>
+                    <span class="theme-icon-dark">&#9788;</span>
+                </button>
+                <button id="scan-btn" class="btn-scan" onclick="startScan()">
+                    <span class="btn-icon">&#x27F3;</span> Scan Now
+                </button>
+            </div>
         </div>
     </header>
 
@@ -62,12 +72,10 @@
             <span id="stats-text">Loading...</span>
         </div>
 
-        <div id="products-grid" class="products-grid">
-            <!-- Products rendered here -->
-        </div>
+        <div id="products-grid" class="products-grid"></div>
 
         <div id="empty-state" class="empty-state hidden">
-            <div class="empty-icon">📋</div>
+            <div class="empty-icon">&#128203;</div>
             <h2>No products found</h2>
             <p>Try lowering the minimum score or click <strong>Scan Now</strong> to fetch fresh data.</p>
         </div>
