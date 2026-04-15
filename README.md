@@ -28,6 +28,10 @@ playwright install chromium
 
 ## Usage
 
+### Quick Start (Windows)
+
+Double-click **`start.bat`** — it handles setup on first run and launches the web UI.
+
 ### Web UI
 
 ```bash
