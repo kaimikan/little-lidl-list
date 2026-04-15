@@ -1,6 +1,7 @@
 // ── State ────────────────────────────────────────────────
 let allProducts = [];
 let activeTag = "";
+let saleOnly = false;
 
 // ── Init ─────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
@@ -60,8 +61,11 @@ function renderProducts() {
     const empty = document.getElementById("empty-state");
 
     let filtered = allProducts;
+    if (saleOnly) {
+        filtered = filtered.filter(p => p.old_price);
+    }
     if (activeTag) {
-        filtered = allProducts.filter(p => p.tags.includes(activeTag));
+        filtered = filtered.filter(p => p.tags.includes(activeTag));
     }
 
     if (filtered.length === 0) {
@@ -136,6 +140,12 @@ function onFilterChange() {
     const val = document.getElementById("min-score").value;
     document.getElementById("min-score-val").textContent = val;
     loadProducts();
+}
+
+function toggleSale() {
+    saleOnly = !saleOnly;
+    document.getElementById("sale-toggle").classList.toggle("active", saleOnly);
+    renderProducts();
 }
 
 function toggleTag(btn) {
