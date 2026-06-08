@@ -11,3 +11,4 @@ dependencies = [
 
 [project.scripts]
 lidl = "lidl.cli:main"
+lidl-summary = "lidl.summary:main"

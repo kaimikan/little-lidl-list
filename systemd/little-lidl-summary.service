@@ -1,0 +1,10 @@
+[Unit]
+Description=little-lidl-list — daily healthy on-sale digest
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/Projects/little-lidl-list
+# scrapes lidl.bg fresh, then writes summaries/lidl-summary-<date>.md
+ExecStart=%h/Projects/little-lidl-list/.venv/bin/lidl-summary --top 25

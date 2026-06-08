@@ -59,6 +59,34 @@ lidl --no-headless
 lidl --list-categories
 ```
 
+## Daily summary digest
+
+`lidl-summary` writes a Markdown digest of the items that are **on sale *and*
+score well** for a training diet — the part worth acting on each week.
+
+```bash
+lidl-summary                 # scrape live, score >= 6, write today's digest
+lidl-summary --cache         # use the last scrape instead of fetching
+lidl-summary --min-score 8 --top 20
+lidl-summary --input fx.json # score an explicit products JSON (for testing)
+```
+
+It writes `summaries/lidl-summary-<date>.md` and echoes it to stdout (so a
+service journal captures it). "On sale" = the item carries a struck-through
+old price.
+
+### Schedule it (daily, user systemd)
+
+```bash
+python -m venv .venv && .venv/bin/pip install -e .
+.venv/bin/playwright install chromium    # needed for live scraping
+./systemd/install.sh                      # installs + enables the 08:00 timer
+```
+
+The timer runs `lidl-summary --top 25` daily (`OnCalendar=*-*-* 08:00:00`,
+`Persistent=true` so a missed run catches up). Inspect with
+`systemctl --user list-timers little-lidl-summary.timer`.
+
 ## Scoring
 
 Products are scored by keyword matching tuned for a training diet:
