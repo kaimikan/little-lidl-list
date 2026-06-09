@@ -1,0 +1,4 @@
+{
+  "serve": ".venv/bin/flask --app lidl.app run --port 5000",
+  "port": 5000
+}
