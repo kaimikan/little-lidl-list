@@ -568,6 +568,175 @@ select:focus { border-color: var(--accent); }
     margin-bottom: 0.5rem;
 }
 
+/* ── Meal plan button ────────────────────────────────────── */
+.btn-mealplan {
+    background: rgba(255,255,255,0.15);
+    color: var(--header-text);
+    border: 1px solid rgba(255,255,255,0.25);
+    padding: 0.6rem 1.1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s;
+}
+
+.btn-mealplan:hover { background: rgba(255,255,255,0.28); transform: translateY(-1px); }
+.btn-mealplan:active { transform: translateY(0); }
+.btn-mealplan .btn-icon { font-size: 1.1rem; }
+
+/* ── Meal plan modal ─────────────────────────────────────── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 17, 23, 0.55);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 4vh 1rem;
+    z-index: 1000;
+    overflow-y: auto;
+    animation: fadeIn 0.2s ease;
+}
+
+.modal-overlay.hidden { display: none; }
+
+.modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 460px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    overflow: hidden;
+    animation: fadeIn 0.25s ease both;
+}
+
+.modal-header {
+    background: var(--header-bg);
+    color: var(--header-text);
+    padding: 1.1rem 1.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.modal-title { display: flex; align-items: center; gap: 0.7rem; }
+.modal-emoji { font-size: 1.6rem; }
+.modal-title h2 { font-size: 1.15rem; font-weight: 800; }
+.modal-sub { font-size: 0.8rem; color: var(--header-sub); }
+
+.modal-close {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: var(--header-text);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.modal-close:hover { background: rgba(255,255,255,0.3); }
+
+.modal-body { padding: 0.5rem 1.3rem; }
+.modal-loading, .modal-empty {
+    padding: 2.5rem 1rem;
+    text-align: center;
+    color: var(--text-dim);
+}
+
+.plan-meal { padding: 0.9rem 0; border-bottom: 1px solid var(--border); }
+.plan-meal:last-child { border-bottom: none; }
+.plan-meal h3 {
+    font-size: 1rem;
+    color: var(--accent);
+    margin-bottom: 0.55rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.plan-emoji { font-size: 1.1rem; }
+
+.plan-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    padding: 0.18rem 0;
+}
+.plan-role {
+    flex: 0 0 84px;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-dim);
+    font-weight: 700;
+}
+.plan-item { flex: 1; font-size: 0.9rem; color: var(--text); }
+.plan-price { font-size: 0.9rem; font-weight: 800; color: var(--price-color); }
+
+.plan-shop {
+    background: var(--surface-hover);
+    margin: 0.5rem -1.3rem 0;
+    padding: 1rem 1.3rem 1.2rem;
+}
+.plan-shop h3 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+    margin-bottom: 0.7rem;
+}
+.plan-shop ul { list-style: none; }
+.plan-shop li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.28rem 0;
+    font-size: 0.9rem;
+    color: var(--text);
+}
+.plan-box {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--accent);
+    border-radius: 4px;
+    flex: 0 0 auto;
+}
+.plan-shop-price { margin-left: auto; font-weight: 700; color: var(--price-color); }
+.plan-shop-price .old-price { margin-left: 0.3rem; }
+
+.modal-actions {
+    display: flex;
+    gap: 0.7rem;
+    padding: 1rem 1.3rem;
+    border-top: 1px solid var(--border);
+}
+.btn-export {
+    flex: 1;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    transition: all 0.2s;
+}
+.btn-export:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.btn-export:active { transform: translateY(0); }
+.btn-export .btn-icon { font-size: 1rem; }
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 768px) {
     header { padding: 0.75rem 1rem; }

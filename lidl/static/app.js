@@ -188,6 +188,81 @@ async function pollScanStatus() {
     }
 }
 
+// ── Meal plan ────────────────────────────────────────────
+function mealPlanScore() {
+    return document.getElementById("min-score").value;
+}
+
+async function openMealPlan() {
+    const overlay = document.getElementById("mealplan-overlay");
+    const body = document.getElementById("mealplan-body");
+    overlay.classList.remove("hidden");
+    body.innerHTML = `<div class="modal-loading">Building your plan&hellip;</div>`;
+
+    const res = await fetch(`/api/mealplan?min_score=${mealPlanScore()}`);
+    const data = await res.json();
+    renderMealPlan(data);
+}
+
+function renderMealPlan(data) {
+    const body = document.getElementById("mealplan-body");
+
+    if (data.message || !data.meals || data.meals.length === 0) {
+        body.innerHTML = `<div class="modal-empty">${escHtml(
+            data.message || "No on-sale healthy picks to build a plan from right now."
+        )}</div>`;
+        return;
+    }
+
+    const mealsHtml = data.meals.map(m => {
+        const rows = m.slots.map(s => `
+            <div class="plan-row">
+                <span class="plan-role">${escHtml(s.role)}</span>
+                <span class="plan-item">${escHtml(s.name)}</span>
+                <span class="plan-price">${escHtml(s.price || "—")}</span>
+            </div>`).join("");
+        return `
+            <section class="plan-meal">
+                <h3><span class="plan-emoji">${m.emoji}</span>${escHtml(m.title)}</h3>
+                ${rows}
+            </section>`;
+    }).join("");
+
+    const shopHtml = (data.shopping || []).map(it => {
+        const was = it.old_price
+            ? `<span class="old-price">${escHtml(it.old_price)}</span>` : "";
+        return `<li><span class="plan-box"></span>
+            <span class="plan-shop-name">${escHtml(it.name)}</span>
+            <span class="plan-shop-price">${escHtml(it.price)} ${was}</span></li>`;
+    }).join("");
+
+    body.innerHTML = `
+        <div class="plan-meals">${mealsHtml}</div>
+        <div class="plan-shop">
+            <h3>&#128722; Shopping list</h3>
+            <ul>${shopHtml}</ul>
+        </div>`;
+}
+
+function closeMealPlan(event) {
+    // Clicks inside the modal are stopped before they reach here; an overlay
+    // click arrives with the overlay itself as target.
+    if (event && event.target.id !== "mealplan-overlay") return;
+    document.getElementById("mealplan-overlay").classList.add("hidden");
+}
+
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeMealPlan();
+});
+
+function downloadMealImage() {
+    window.open(`/api/mealplan/image?min_score=${mealPlanScore()}`, "_blank");
+}
+
+function downloadChecklist() {
+    window.open(`/api/mealplan/checklist?min_score=${mealPlanScore()}`, "_blank");
+}
+
 // ── Helpers ──────────────────────────────────────────────
 function escHtml(str) {
     if (!str) return "";

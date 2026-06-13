@@ -38,7 +38,9 @@ Double-click **`start.bat`** — it handles setup on first run and launches the 
 python -m lidl.app
 ```
 
-Opens the browser at `http://localhost:5000`.
+Opens the browser at `http://localhost:5000`. Click **🍽️ Meal Plan** in the
+header to generate the 3-meal plan in a modal and save the image card or the
+plain-text checklist straight from the browser.
 
 ### CLI
 

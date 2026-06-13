@@ -26,6 +26,9 @@
                     <span class="theme-icon-light">&#9789;</span>
                     <span class="theme-icon-dark">&#9788;</span>
                 </button>
+                <button id="mealplan-btn" class="btn-mealplan" onclick="openMealPlan()">
+                    <span class="btn-icon">&#127869;</span> Meal Plan
+                </button>
                 <button id="scan-btn" class="btn-scan" onclick="startScan()">
                     <span class="btn-icon">&#x27F3;</span> Scan Now
                 </button>
@@ -84,6 +87,31 @@
             <p>Try lowering the minimum score or click <strong>Scan Now</strong> to fetch fresh data.</p>
         </div>
     </main>
+
+    <!-- Meal plan modal -->
+    <div id="mealplan-overlay" class="modal-overlay hidden" onclick="closeMealPlan(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="modal-emoji">&#127869;</span>
+                    <div>
+                        <h2>Meal Plan</h2>
+                        <p id="mealplan-sub" class="modal-sub">Healthy picks on sale</p>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeMealPlan()" title="Close">&times;</button>
+            </div>
+            <div id="mealplan-body" class="modal-body"></div>
+            <div class="modal-actions">
+                <button class="btn-export" onclick="downloadMealImage()">
+                    <span class="btn-icon">&#128247;</span> Save image
+                </button>
+                <button class="btn-export" onclick="downloadChecklist()">
+                    <span class="btn-icon">&#128203;</span> Save checklist
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script src="/static/app.js"></script>
 </body>
