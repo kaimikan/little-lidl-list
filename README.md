@@ -75,6 +75,32 @@ It writes `summaries/lidl-summary-<date>.md` and echoes it to stdout (so a
 service journal captures it). "On sale" = the item carries a struck-through
 old price.
 
+The same run also chains a **meal plan** onto the digest (see below), so the
+daily timer produces everything in one shot.
+
+## Meal plan + phone exports
+
+`lidl-mealplan` turns the on-sale healthy picks into three meals
+(breakfast / lunch / dinner — each built around protein + complex carb + veg
+or fruit, preferring the best-scoring discounted item per slot) plus a
+deduplicated shopping list. It's also run automatically at the end of every
+`lidl-summary`.
+
+```bash
+lidl-mealplan --cache        # plan from the last scrape (no fetching)
+lidl-mealplan                # scrape live, then plan
+lidl-mealplan --min-score 6  # raise the health bar for eligible items
+lidl-mealplan --no-image     # Markdown + checklist only (skip the PNG)
+```
+
+It writes three phone-friendly exports into `summaries/`:
+
+- `meal-plan-<date>.md` — the plan + shopping list as Markdown
+- `meal-plan-<date>.png` — a shareable **image card** in the Lidl palette
+  (rendered by screenshotting a branded HTML card with Playwright — no extra
+  dependency)
+- `shopping-list-<date>.txt` — a plain-text `[ ]` checklist to copy onto a phone
+
 ### Schedule it (daily, user systemd)
 
 ```bash

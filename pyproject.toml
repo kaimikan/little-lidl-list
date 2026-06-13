@@ -9,6 +9,11 @@ dependencies = [
     "flask>=3.0",
 ]
 
+[tool.setuptools]
+# Only ship the package; summaries/ and systemd/ are data dirs, not packages.
+packages = ["lidl"]
+
 [project.scripts]
 lidl = "lidl.cli:main"
 lidl-summary = "lidl.summary:main"
+lidl-mealplan = "lidl.mealplan:main"

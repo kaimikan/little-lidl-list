@@ -88,6 +88,8 @@ def main():
     ap.add_argument("--input", help="score products from an explicit JSON file")
     ap.add_argument("--out", default=str(OUT_DIR), help="output directory")
     ap.add_argument("--no-headless", action="store_true", help="show the browser while scraping")
+    ap.add_argument("--no-image", action="store_true",
+                    help="skip the meal-plan PNG card (Markdown + checklist only)")
     args = ap.parse_args()
 
     products = load_products(args.input, args.cache, headless=not args.no_headless)
@@ -106,6 +108,14 @@ def main():
 
     print(md)
     print(f"\n[written: {out_file}]", file=sys.stderr)
+
+    # Chain a 3-meal plan + shopping list + phone exports onto the digest, so
+    # the daily timer produces them in the same run.
+    from lidl.mealplan import build_meal_plan, write_exports
+    meals = build_meal_plan(on_sale_items)
+    extras = write_exports(meals, when, out_dir, make_image=not args.no_image)
+    for label, path in extras.items():
+        print(f"[meal-plan {label}: {path}]", file=sys.stderr)
 
 
 if __name__ == "__main__":
