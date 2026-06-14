@@ -126,17 +126,35 @@ The timer runs `lidl-summary --top 25` daily (`OnCalendar=*-*-* 08:00:00`,
 
 ## Scoring
 
-Products are scored by keyword matching tuned for a training diet:
+Each product gets a **health score** (≈0–15) from a transparent heuristic over
+its name, scraped category, and price:
 
-| Tag | Examples | Score boost |
-|-----|----------|-------------|
-| Protein | Chicken, salmon, eggs, cottage cheese, skyr, Greek yogurt | +7 to +9 |
-| Complex carbs | Oats, rice, lentils, quinoa, sweet potato | +6 to +8 |
-| Healthy fats | Olive oil, avocado, nuts, peanut butter | +6 to +8 |
-| Vegetables | Broccoli, spinach, peppers, tomatoes | +5 to +8 |
-| Fruit | Bananas, apples | +6 to +7 |
+| Role | Examples | Value |
+|------|----------|-------|
+| Protein | Chicken, turkey, salmon, tuna, eggs, cottage cheese, skyr, kashkaval, Greek yogurt | 4–9 |
+| Complex carbs | Oats, lentils, quinoa, beans, chickpeas, sweet potato, brown rice | 4–8 |
+| Healthy fats | Avocado, olive oil, nuts, tahini, chia, peanut butter | 5–8 |
+| Vegetables | Broccoli, spinach, kale, peppers, tomatoes, zucchini, mushrooms | 4–8 |
+| Fruit | Berries, banana, apple, citrus, kiwi | 5–7 |
 
-Junk food, alcohol, and heavily processed items receive negative scores.
+How the score is built (a rewrite of the original additive-keyword version):
+
+- **Word-boundary stem matching** — inflected forms match (`ориз` → `оризови`)
+  but a stem can't match mid-word, so `ориз` (rice) no longer tags `чоризо`
+  (chorizo) as a carb.
+- **Best role, not a sum** — the score is the best single thing about an item,
+  not a pile of keywords, so a dessert bar can't out-score chicken and a
+  "chicken fillet" isn't double-counted.
+- **Category prior** — an unmatched item in *Fresh meat* is seeded as protein
+  (rescuing ~half the catalogue that the name alone missed), while anything in
+  *Snacks & sweets* is blocked from counting as real food.
+- **Sugar-free guard** — `без захар` grants a small quality bonus instead of
+  triggering the `захар` (sugar) penalty.
+- **`value` = health per €** — a price signal used only as a tiebreaker; price
+  never makes a food unhealthy.
+
+Junk, alcohol, sugary drinks, and processed/deli items take penalties and have
+their healthy-role tags stripped so the meal planner won't pick them.
 
 ## Tech Stack
 

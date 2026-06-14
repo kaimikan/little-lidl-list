@@ -101,7 +101,7 @@ def _buckets(items: list[ScoredProduct]) -> dict[str, list[ScoredProduct]]:
         for tag in sp.tags:
             by_tag.setdefault(tag, []).append(sp)
     for tag in by_tag:
-        by_tag[tag].sort(key=lambda s: s.score, reverse=True)
+        by_tag[tag].sort(key=lambda s: (s.score, s.value), reverse=True)
     return by_tag
 
 
