@@ -189,19 +189,38 @@ async function pollScanStatus() {
 }
 
 // ── Meal plan ────────────────────────────────────────────
+let mealMode = "sale";  // "sale" = on-sale picks, "best" = healthiest overall
+
 function mealPlanScore() {
     return document.getElementById("min-score").value;
 }
 
+const MEAL_SUBTITLES = {
+    sale: "Healthy picks on sale",
+    best: "Healthiest picks — on sale or not",
+};
+
 async function openMealPlan() {
-    const overlay = document.getElementById("mealplan-overlay");
+    document.getElementById("mealplan-overlay").classList.remove("hidden");
+    await loadMealPlan();
+}
+
+async function loadMealPlan() {
     const body = document.getElementById("mealplan-body");
-    overlay.classList.remove("hidden");
+    document.getElementById("mealplan-sub").textContent = MEAL_SUBTITLES[mealMode];
+    document.getElementById("tab-sale").classList.toggle("active", mealMode === "sale");
+    document.getElementById("tab-best").classList.toggle("active", mealMode === "best");
     body.innerHTML = `<div class="modal-loading">Building your plan&hellip;</div>`;
 
-    const res = await fetch(`/api/mealplan?min_score=${mealPlanScore()}`);
+    const res = await fetch(`/api/mealplan?mode=${mealMode}&min_score=${mealPlanScore()}`);
     const data = await res.json();
     renderMealPlan(data);
+}
+
+function setMealMode(mode) {
+    if (mode === mealMode) return;
+    mealMode = mode;
+    loadMealPlan();
 }
 
 function renderMealPlan(data) {
@@ -256,11 +275,11 @@ document.addEventListener("keydown", (e) => {
 });
 
 function downloadMealImage() {
-    window.open(`/api/mealplan/image?min_score=${mealPlanScore()}`, "_blank");
+    window.open(`/api/mealplan/image?mode=${mealMode}&min_score=${mealPlanScore()}`, "_blank");
 }
 
 function downloadChecklist() {
-    window.open(`/api/mealplan/checklist?min_score=${mealPlanScore()}`, "_blank");
+    window.open(`/api/mealplan/checklist?mode=${mealMode}&min_score=${mealPlanScore()}`, "_blank");
 }
 
 // ── Helpers ──────────────────────────────────────────────

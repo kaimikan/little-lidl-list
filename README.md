@@ -39,8 +39,10 @@ python -m lidl.app
 ```
 
 Opens the browser at `http://localhost:5000`. Click **🍽️ Meal Plan** in the
-header to generate the 3-meal plan in a modal and save the image card or the
-plain-text checklist straight from the browser.
+header to generate a 3-meal plan in a modal — toggle between **On Sale**
+(what's worth buying this week) and **Healthiest** (the best training picks
+regardless of price) — and save the image card or plain-text checklist
+straight from the browser.
 
 ### CLI
 
@@ -89,11 +91,18 @@ deduplicated shopping list. It's also run automatically at the end of every
 `lidl-summary`.
 
 ```bash
-lidl-mealplan --cache        # plan from the last scrape (no fetching)
-lidl-mealplan                # scrape live, then plan
-lidl-mealplan --min-score 6  # raise the health bar for eligible items
-lidl-mealplan --no-image     # Markdown + checklist only (skip the PNG)
+lidl-mealplan --cache         # plan from the last scrape (no fetching)
+lidl-mealplan                 # scrape live, then plan
+lidl-mealplan --mode best     # healthiest picks regardless of price
+lidl-mealplan --mode both     # write both the on-sale and healthiest plans
+lidl-mealplan --min-score 6   # raise the health bar for eligible items
+lidl-mealplan --no-image      # Markdown + checklist only (skip the PNG)
 ```
+
+Two flavours: `--mode sale` (default) plans from **discounted** picks — what's
+worth acting on this week — while `--mode best` ignores price and plans from the
+**highest-scoring** items. The `-best` plans are written with a `-best` suffix so
+they sit alongside the on-sale ones.
 
 It writes three phone-friendly exports into `summaries/`:
 

@@ -101,6 +101,10 @@
                 </div>
                 <button class="modal-close" onclick="closeMealPlan()" title="Close">&times;</button>
             </div>
+            <div class="modal-tabs">
+                <button id="tab-sale" class="modal-tab active" onclick="setMealMode('sale')">On Sale</button>
+                <button id="tab-best" class="modal-tab" onclick="setMealMode('best')">Healthiest</button>
+            </div>
             <div id="mealplan-body" class="modal-body"></div>
             <div class="modal-actions">
                 <button class="btn-export" onclick="downloadMealImage()">

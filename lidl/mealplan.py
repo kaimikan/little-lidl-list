@@ -55,12 +55,43 @@ class Meal:
 
 
 # Each meal asks for a sequence of (tag, role-label) slots. The planner fills
-# them from the best-scoring on-sale item carrying that tag.
+# them from the best-scoring item carrying that tag.
 MEAL_TEMPLATES: list[tuple[str, str, list[tuple[str, str]]]] = [
     ("Breakfast", "🌅", [("protein", "Protein"), ("carbs", "Carb"), ("fruit", "Fruit")]),
     ("Lunch", "☀️", [("protein", "Protein"), ("vegetable", "Veg"), ("carbs", "Carb")]),
     ("Dinner", "🌙", [("protein", "Protein"), ("vegetable", "Veg"), ("healthy_fat", "Healthy fat")]),
 ]
+
+# Two plan flavours: what's worth buying *this week* vs. the ideal training
+# basket regardless of price. The planner itself is price-agnostic — the caller
+# picks the item pool via select_items().
+MODES: dict[str, dict[str, str]] = {
+    "sale": {
+        "slug": "",
+        "subtitle": "healthy picks on sale",
+        "intro": "Three meals built from today's **discounted** healthy picks.",
+        "empty": "No on-sale healthy picks to build a plan from right now.",
+    },
+    "best": {
+        "slug": "-best",
+        "subtitle": "healthiest picks",
+        "intro": "Three meals built from the **highest-scoring** healthy picks, "
+                 "on sale or not.",
+        "empty": "No healthy picks to build a plan from yet — try a scan.",
+    },
+}
+
+
+def is_on_sale(product) -> bool:
+    """A product is discounted when it carries a struck-through old price."""
+    return bool((product.old_price or "").strip())
+
+
+def select_items(ranked: list[ScoredProduct], mode: str = "sale") -> list[ScoredProduct]:
+    """Pick the item pool for a plan flavour: on-sale only, or everything."""
+    if mode == "best":
+        return list(ranked)
+    return [sp for sp in ranked if is_on_sale(sp.product)]
 
 
 def _buckets(items: list[ScoredProduct]) -> dict[str, list[ScoredProduct]]:
@@ -129,12 +160,13 @@ def shopping_list(meals: list[Meal]) -> list[ShoppingItem]:
 
 # ── Exports ─────────────────────────────────────────────────────────
 
-def build_markdown(meals: list[Meal], when: str) -> str:
+def build_markdown(meals: list[Meal], when: str, mode: str = "sale") -> str:
+    cfg = MODES.get(mode, MODES["sale"])
     lines = [f"# 🍽️ Lidl meal plan — {when}", ""]
     if not meals:
-        lines.append("_No on-sale healthy picks to build a plan from today._")
+        lines.append(f"_{cfg['empty']}_")
         return "\n".join(lines)
-    lines.append("Three meals built from today's **discounted** healthy picks.")
+    lines.append(cfg["intro"])
     lines.append("")
     for meal in meals:
         lines.append(f"## {meal.emoji} {meal.title}")
@@ -167,7 +199,8 @@ def build_checklist_text(meals: list[Meal], when: str) -> str:
     return "\n".join(lines) + "\n"
 
 
-def build_card_html(meals: list[Meal], when: str) -> str:
+def build_card_html(meals: list[Meal], when: str,
+                    subtitle: str = "healthy picks on sale") -> str:
     """A self-contained, phone-width HTML card in the Lidl palette.
 
     Rendered to PNG by ``export_image`` — kept inline (no template) so the
@@ -235,19 +268,20 @@ def build_card_html(meals: list[Meal], when: str) -> str:
 <div class="card">
   <header>
     <div class="badge">L</div>
-    <div><div class="t">Meal plan</div><div class="d">{escape(when)} · healthy picks on sale</div></div>
+    <div><div class="t">Meal plan</div><div class="d">{escape(when)} · {escape(subtitle)}</div></div>
   </header>
-  <div class="meals">{''.join(meal_blocks) or '<p style="padding:24px">Nothing on sale today.</p>'}</div>
+  <div class="meals">{''.join(meal_blocks) or '<p style="padding:24px">Nothing to plan today.</p>'}</div>
   <div class="shop"><h3>🛒 Shopping list</h3><ul>{shop}</ul></div>
   <footer>little-lidl-list · prices from <b>lidl.bg</b></footer>
 </div></body></html>"""
 
 
-def export_image(meals: list[Meal], when: str, out_path: Path) -> Path:
+def export_image(meals: list[Meal], when: str, out_path: Path,
+                 subtitle: str = "healthy picks on sale") -> Path:
     """Screenshot the branded HTML card to a PNG using Playwright."""
     from playwright.sync_api import sync_playwright
 
-    html = build_card_html(meals, when)
+    html = build_card_html(meals, when, subtitle=subtitle)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as pw:
         browser = pw.chromium.launch(headless=True)
@@ -261,23 +295,25 @@ def export_image(meals: list[Meal], when: str, out_path: Path) -> Path:
 
 
 def write_exports(meals: list[Meal], when: str, out_dir: Path,
-                  make_image: bool = True) -> dict[str, Path]:
+                  make_image: bool = True, mode: str = "sale") -> dict[str, Path]:
     """Write the plan Markdown, checklist text, and (optionally) the PNG card."""
+    cfg = MODES.get(mode, MODES["sale"])
+    slug = cfg["slug"]
     out_dir.mkdir(parents=True, exist_ok=True)
     written: dict[str, Path] = {}
 
-    md_file = out_dir / f"meal-plan-{when}.md"
-    md_file.write_text(build_markdown(meals, when), encoding="utf-8")
+    md_file = out_dir / f"meal-plan{slug}-{when}.md"
+    md_file.write_text(build_markdown(meals, when, mode=mode), encoding="utf-8")
     written["markdown"] = md_file
 
-    txt_file = out_dir / f"shopping-list-{when}.txt"
+    txt_file = out_dir / f"shopping-list{slug}-{when}.txt"
     txt_file.write_text(build_checklist_text(meals, when), encoding="utf-8")
     written["checklist"] = txt_file
 
     if make_image:
-        png_file = out_dir / f"meal-plan-{when}.png"
+        png_file = out_dir / f"meal-plan{slug}-{when}.png"
         try:
-            export_image(meals, when, png_file)
+            export_image(meals, when, png_file, subtitle=cfg["subtitle"])
             written["image"] = png_file
         except Exception as e:  # don't let a render hiccup break the digest run
             print(f"[meal-plan image skipped: {e}]", file=sys.stderr)
@@ -289,7 +325,10 @@ def main():
     ap = argparse.ArgumentParser(
         prog="lidl-mealplan",
         description="Build a 3-meal plan + shopping list + phone exports from "
-                    "the on-sale healthy Lidl picks")
+                    "the healthy Lidl picks")
+    ap.add_argument("--mode", choices=["sale", "best", "both"], default="sale",
+                    help="'sale' = on-sale picks (default), 'best' = healthiest "
+                         "regardless of price, 'both' = write both plans")
     ap.add_argument("--min-score", type=int, default=5,
                     help="minimum health score for eligible items (default: 5)")
     ap.add_argument("--cache", action="store_true", help="use the cached scrape")
@@ -302,18 +341,20 @@ def main():
     args = ap.parse_args()
 
     # Reuse the digest's loader so behaviour matches the daily run exactly.
-    from lidl.summary import load_products, on_sale
+    from lidl.summary import load_products
     products = load_products(args.input, args.cache, headless=not args.no_headless)
     ranked = rank_products(products, min_score=args.min_score)
-    on_sale_items = [sp for sp in ranked if on_sale(sp.product)]
 
-    meals = build_meal_plan(on_sale_items)
     when = date.today().isoformat()
-    written = write_exports(meals, when, Path(args.out), make_image=not args.no_image)
-
-    print(build_markdown(meals, when))
-    for label, path in written.items():
-        print(f"[{label}: {path}]", file=sys.stderr)
+    modes = ["sale", "best"] if args.mode == "both" else [args.mode]
+    for mode in modes:
+        meals = build_meal_plan(select_items(ranked, mode))
+        written = write_exports(meals, when, Path(args.out),
+                                make_image=not args.no_image, mode=mode)
+        print(build_markdown(meals, when, mode=mode))
+        print()
+        for label, path in written.items():
+            print(f"[{mode} {label}: {path}]", file=sys.stderr)
 
 
 if __name__ == "__main__":

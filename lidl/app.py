@@ -12,7 +12,8 @@ from flask import Flask, render_template, jsonify, request, send_file, Response
 from lidl.scraper import scrape, clean_price, parse_prices, FOOD_CATEGORIES, CACHE_FILE, Product
 from lidl.scorer import rank_products, score_product
 from lidl.mealplan import (
-    build_meal_plan, shopping_list, build_checklist_text, export_image, OUT_DIR,
+    build_meal_plan, shopping_list, build_checklist_text, export_image,
+    select_items, MODES, OUT_DIR,
 )
 
 app = Flask(__name__)
@@ -78,25 +79,33 @@ def api_categories():
 
 # ── Meal plan ────────────────────────────────────────────────────────
 
-def _mealplan_from_cache(min_score: int):
-    """Build the 3-meal plan from the cached scrape, or None if no cache."""
+def _mealplan_from_cache(min_score: int, mode: str = "sale"):
+    """Build a 3-meal plan from the cached scrape, or None if no cache.
+
+    mode="sale" plans from on-sale picks; mode="best" from the highest-scoring
+    items regardless of price.
+    """
     if not CACHE_FILE.exists():
         return None
     data = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
     fields = Product.__dataclass_fields__
     products = [Product(**{k: v for k, v in d.items() if k in fields}) for d in data]
     ranked = rank_products(products, min_score=min_score)
-    on_sale_items = [sp for sp in ranked if (sp.product.old_price or "").strip()]
-    return build_meal_plan(on_sale_items)
+    return build_meal_plan(select_items(ranked, mode))
+
+
+def _mode_arg() -> str:
+    return "best" if request.args.get("mode") == "best" else "sale"
 
 
 @app.route("/api/mealplan")
 def api_mealplan():
     """Return the 3-meal plan + shopping list as JSON, built from cache."""
     min_score = int(request.args.get("min_score", 5))
-    meals = _mealplan_from_cache(min_score)
+    mode = _mode_arg()
+    meals = _mealplan_from_cache(min_score, mode)
     if meals is None:
-        return jsonify({"meals": [], "shopping": [],
+        return jsonify({"meals": [], "shopping": [], "mode": mode,
                         "message": "No data yet. Click Scan Now to fetch products."})
 
     meals_json = [{
@@ -117,32 +126,38 @@ def api_mealplan():
         "old_price": it.old_price, "category": it.category,
     } for it in shopping_list(meals)]
 
-    return jsonify({"meals": meals_json, "shopping": shopping})
+    msg = "" if meals_json else MODES[mode]["empty"]
+    return jsonify({"meals": meals_json, "shopping": shopping,
+                    "mode": mode, "message": msg})
 
 
 @app.route("/api/mealplan/image")
 def api_mealplan_image():
     """Render the branded meal-plan card to PNG and send it for download."""
     min_score = int(request.args.get("min_score", 5))
-    meals = _mealplan_from_cache(min_score)
+    mode = _mode_arg()
+    meals = _mealplan_from_cache(min_score, mode)
     if not meals:
         return jsonify({"message": "No meal plan to render. Scan first."}), 404
     when = date.today().isoformat()
-    out = OUT_DIR / f"meal-plan-{when}.png"
-    export_image(meals, when, out)
+    slug = MODES[mode]["slug"]
+    out = OUT_DIR / f"meal-plan{slug}-{when}.png"
+    export_image(meals, when, out, subtitle=MODES[mode]["subtitle"])
     return send_file(out, mimetype="image/png", as_attachment=True,
-                     download_name=f"lidl-meal-plan-{when}.png")
+                     download_name=f"lidl-meal-plan{slug}-{when}.png")
 
 
 @app.route("/api/mealplan/checklist")
 def api_mealplan_checklist():
     """Send the plain-text shopping checklist for download."""
     min_score = int(request.args.get("min_score", 5))
-    meals = _mealplan_from_cache(min_score)
+    mode = _mode_arg()
+    meals = _mealplan_from_cache(min_score, mode)
     when = date.today().isoformat()
+    slug = MODES[mode]["slug"]
     text = build_checklist_text(meals or [], when)
     return Response(text, mimetype="text/plain", headers={
-        "Content-Disposition": f"attachment; filename=lidl-shopping-{when}.txt",
+        "Content-Disposition": f"attachment; filename=lidl-shopping{slug}-{when}.txt",
     })
 
 

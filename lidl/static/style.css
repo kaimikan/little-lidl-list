@@ -644,6 +644,28 @@ select:focus { border-color: var(--accent); }
 }
 .modal-close:hover { background: rgba(255,255,255,0.3); }
 
+.modal-tabs {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.7rem 1.3rem 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+.modal-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.5rem 0.5rem 0.7rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+.modal-tab:hover { color: var(--text); }
+.modal-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
 .modal-body { padding: 0.5rem 1.3rem; }
 .modal-loading, .modal-empty {
     padding: 2.5rem 1rem;
