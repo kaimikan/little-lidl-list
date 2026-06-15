@@ -270,8 +270,18 @@ function closeMealPlan(event) {
     document.getElementById("mealplan-overlay").classList.add("hidden");
 }
 
+// ── Nutri-Score explainer ────────────────────────────────
+function openNutri() {
+    document.getElementById("nutri-overlay").classList.remove("hidden");
+}
+
+function closeNutri(event) {
+    if (event && event.target.id !== "nutri-overlay") return;
+    document.getElementById("nutri-overlay").classList.add("hidden");
+}
+
 document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeMealPlan();
+    if (e.key === "Escape") { closeMealPlan(); closeNutri(); }
 });
 
 function downloadMealImage() {

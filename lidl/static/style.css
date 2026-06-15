@@ -759,6 +759,53 @@ select:focus { border-color: var(--accent); }
 .btn-export:active { transform: translateY(0); }
 .btn-export .btn-icon { font-size: 1rem; }
 
+/* ── Nutri-Score explainer ───────────────────────────────── */
+.nutri-body { padding: 1.1rem 1.3rem 1.4rem; line-height: 1.5; color: var(--text); }
+.nutri-body p { margin: 0.6rem 0; font-size: 0.9rem; }
+.nutri-body h4 {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+    margin: 1rem 0 0.4rem;
+}
+.nutri-scale { display: flex; gap: 4px; margin-bottom: 0.4rem; }
+.nutri-grade {
+    flex: 1;
+    text-align: center;
+    padding: 0.45rem 0;
+    border-radius: var(--radius-sm);
+    font-weight: 800;
+    color: #fff;
+    font-size: 1rem;
+}
+.g-a { background: #16a34a; }
+.g-b { background: #84cc16; color: #1a1d27; }
+.g-c { background: #facc15; color: #1a1d27; }
+.g-d { background: #f97316; }
+.g-e { background: #dc2626; }
+
+.nutri-list { list-style: none; margin: 0.3rem 0; }
+.nutri-list li { font-size: 0.9rem; padding: 0.22rem 0 0.22rem 1.5rem; position: relative; }
+.nutri-bad, .nutri-good {
+    position: absolute;
+    left: 0;
+    font-weight: 900;
+    width: 1.1rem;
+    text-align: center;
+}
+.nutri-good { color: var(--green); }
+.nutri-bad { color: var(--red); }
+.nutri-dim { color: var(--text-dim); font-size: 0.85rem !important; }
+.nutri-tip {
+    background: var(--accent-light);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm);
+    padding: 0.7rem 0.9rem;
+    margin-top: 1rem !important;
+    font-size: 0.87rem !important;
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 768px) {
     header { padding: 0.75rem 1rem; }

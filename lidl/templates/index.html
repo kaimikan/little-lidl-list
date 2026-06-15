@@ -22,6 +22,9 @@
                 </div>
             </div>
             <div class="header-actions">
+                <button id="nutri-btn" class="btn-theme" onclick="openNutri()" title="What's a Nutri-Score?">
+                    <span>&#8505;</span>
+                </button>
                 <button id="theme-toggle" class="btn-theme" onclick="toggleTheme()" title="Toggle theme">
                     <span class="theme-icon-light">&#9789;</span>
                     <span class="theme-icon-dark">&#9788;</span>
@@ -113,6 +116,61 @@
                 <button class="btn-export" onclick="downloadChecklist()">
                     <span class="btn-icon">&#128203;</span> Save checklist
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nutri-Score explainer modal -->
+    <div id="nutri-overlay" class="modal-overlay hidden" onclick="closeNutri(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="modal-emoji">&#127859;</span>
+                    <div>
+                        <h2>What's a Nutri-Score?</h2>
+                        <p class="modal-sub">The A&ndash;E letter on Lidl packs</p>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeNutri()" title="Close">&times;</button>
+            </div>
+            <div class="modal-body nutri-body">
+                <div class="nutri-scale">
+                    <span class="nutri-grade g-a">A</span>
+                    <span class="nutri-grade g-b">B</span>
+                    <span class="nutri-grade g-c">C</span>
+                    <span class="nutri-grade g-d">D</span>
+                    <span class="nutri-grade g-e">E</span>
+                </div>
+
+                <p>An EU front-of-pack label (A = green, E = red). It's a points
+                   formula scored <strong>per 100&nbsp;g</strong> &mdash; and it's
+                   <strong>separate from this app's score</strong>, which reads the
+                   product name.</p>
+
+                <h4>How it's calculated</h4>
+                <ul class="nutri-list">
+                    <li><span class="nutri-bad">&minus;</span> Bad points: calories,
+                        saturated fat, sugar, salt</li>
+                    <li><span class="nutri-good">+</span> Good points: protein, fibre,
+                        % fruit / veg / legumes / nuts</li>
+                </ul>
+                <p class="nutri-dim">Bad minus good &rarr; a letter. It's blind to
+                   frying, freezing, and processing.</p>
+
+                <h4>Why it can mislead</h4>
+                <ul class="nutri-list">
+                    <li><strong>Fried fish &amp; oven fries score A&ndash;B</strong> &mdash;
+                        protein/fibre count, the frying doesn't.</li>
+                    <li><strong>Olive oil, nuts, cheese, oily fish score C&ndash;E</strong>
+                        &mdash; fat &amp; calories are punished hard.</li>
+                    <li>It's <strong>per 100&nbsp;g, not per portion</strong> &mdash; a splash
+                        of oil looks worse than a plate of fries.</li>
+                </ul>
+
+                <p class="nutri-tip"><strong>Use it for:</strong> comparing similar
+                   products (yogurt vs yogurt, bread vs bread). <strong>Don't</strong> let
+                   it override &ldquo;is this a whole food?&rdquo; &mdash; that's where it
+                   falls down, and where this app's protein/carb/veg lens is better.</p>
             </div>
         </div>
     </div>
