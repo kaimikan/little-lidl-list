@@ -597,13 +597,18 @@ select:focus { border-color: var(--accent); }
     display: flex;
     align-items: flex-start;
     justify-content: center;
-    padding: 4vh 1rem;
+    padding: 3vh 1rem;
     z-index: 1000;
-    overflow-y: auto;
+    overflow: hidden;            /* the body scrolls, not the overlay */
+    overscroll-behavior: contain;
     animation: fadeIn 0.2s ease;
 }
 
 .modal-overlay.hidden { display: none; }
+
+/* While a modal is open, freeze the page behind it so scrolling can't bleed
+   through once you reach the end of the modal body. */
+body.modal-open { overflow: hidden; }
 
 .modal {
     background: var(--surface);
@@ -611,12 +616,16 @@ select:focus { border-color: var(--accent); }
     border-radius: var(--radius);
     width: 100%;
     max-width: 460px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    max-height: calc(100vh - 6vh); /* fit the screen; header+footer pinned */
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     animation: fadeIn 0.25s ease both;
 }
 
 .modal-header {
+    flex: 0 0 auto;             /* pinned, always visible */
     background: var(--header-bg);
     color: var(--header-text);
     padding: 1.1rem 1.3rem;
@@ -645,6 +654,7 @@ select:focus { border-color: var(--accent); }
 .modal-close:hover { background: rgba(255,255,255,0.3); }
 
 .modal-tabs {
+    flex: 0 0 auto;            /* pinned below the header */
     display: flex;
     gap: 0.4rem;
     padding: 0.7rem 1.3rem 0;
@@ -666,7 +676,12 @@ select:focus { border-color: var(--accent); }
 .modal-tab:hover { color: var(--text); }
 .modal-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-.modal-body { padding: 0.5rem 1.3rem; }
+.modal-body {
+    flex: 1 1 auto;           /* the only scroller; header/footer stay put */
+    overflow-y: auto;
+    overscroll-behavior: contain; /* don't chain scroll to the page behind */
+    padding: 0.5rem 1.3rem;
+}
 .modal-loading, .modal-empty {
     padding: 2.5rem 1rem;
     text-align: center;
@@ -734,10 +749,12 @@ select:focus { border-color: var(--accent); }
 .plan-shop-price .old-price { margin-left: 0.3rem; }
 
 .modal-actions {
+    flex: 0 0 auto;           /* footer pinned, always visible */
     display: flex;
     gap: 0.7rem;
     padding: 1rem 1.3rem;
     border-top: 1px solid var(--border);
+    background: var(--surface);
 }
 .btn-export {
     flex: 1;

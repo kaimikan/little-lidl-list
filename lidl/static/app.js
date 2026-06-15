@@ -200,8 +200,15 @@ const MEAL_SUBTITLES = {
     best: "Healthiest picks — on sale or not",
 };
 
+// Lock/unlock the page scroll based on whether any modal is open.
+function syncBodyScrollLock() {
+    const anyOpen = document.querySelector(".modal-overlay:not(.hidden)") !== null;
+    document.body.classList.toggle("modal-open", anyOpen);
+}
+
 async function openMealPlan() {
     document.getElementById("mealplan-overlay").classList.remove("hidden");
+    syncBodyScrollLock();
     await loadMealPlan();
 }
 
@@ -268,16 +275,19 @@ function closeMealPlan(event) {
     // click arrives with the overlay itself as target.
     if (event && event.target.id !== "mealplan-overlay") return;
     document.getElementById("mealplan-overlay").classList.add("hidden");
+    syncBodyScrollLock();
 }
 
 // ── Nutri-Score explainer ────────────────────────────────
 function openNutri() {
     document.getElementById("nutri-overlay").classList.remove("hidden");
+    syncBodyScrollLock();
 }
 
 function closeNutri(event) {
     if (event && event.target.id !== "nutri-overlay") return;
     document.getElementById("nutri-overlay").classList.add("hidden");
+    syncBodyScrollLock();
 }
 
 document.addEventListener("keydown", (e) => {
