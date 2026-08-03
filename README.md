@@ -7,13 +7,13 @@ Scan Lidl Bulgaria's weekly offers and find the best items for a training-focuse
 ## Features
 
 - **Scrapes 200+ products** across 16 food categories from Lidl Bulgaria
-- **Health/fitness scoring** — ranks items by relevance for training (high protein, complex carbs, healthy fats, vegetables)
+- **Health/fitness scoring**: ranks items by relevance for training (high protein, complex carbs, healthy fats, vegetables)
 - **Product images** embedded directly in the UI
-- **Sale filter** — toggle to show only discounted items
-- **Category & tag filters** — filter by food category or nutritional tag (protein, carbs, healthy fat, vegetable, fruit, supplement)
-- **Light/dark theme** — Lidl-branded color scheme with toggle
-- **Caching** — scrape once, browse instantly with cached results
-- **CLI** — terminal interface with Rich tables
+- **Sale filter**: toggle to show only discounted items
+- **Category & tag filters**: filter by food category or nutritional tag (protein, carbs, healthy fat, vegetable, fruit, supplement)
+- **Light/dark theme**: Lidl-branded color scheme with toggle
+- **Caching**: scrape once, browse instantly with cached results
+- **CLI**: terminal interface with Rich tables
 
 ## Setup
 
@@ -30,7 +30,7 @@ playwright install chromium
 
 ### Quick Start (Windows)
 
-Double-click **`start.bat`** — it handles setup on first run and launches the web UI.
+Double-click **`start.bat`**. It handles setup on first run and launches the web UI.
 
 ### Web UI
 
@@ -39,9 +39,9 @@ python -m lidl.app
 ```
 
 Opens the browser at `http://localhost:5000`. Click **🍽️ Meal Plan** in the
-header to generate a 3-meal plan in a modal — toggle between **On Sale**
+header to generate a 3-meal plan in a modal. Toggle between **On Sale**
 (what's worth buying this week) and **Healthiest** (the best training picks
-regardless of price) — and save the image card or plain-text checklist
+regardless of price), then save the image card or plain-text checklist
 straight from the browser.
 
 ### CLI
@@ -66,7 +66,7 @@ lidl --list-categories
 ## Daily summary digest
 
 `lidl-summary` writes a Markdown digest of the items that are **on sale *and*
-score well** for a training diet — the part worth acting on each week.
+score well** for a training diet, the part worth acting on each week.
 
 ```bash
 lidl-summary                 # scrape live, score >= 6, write today's digest
@@ -85,7 +85,7 @@ daily timer produces everything in one shot.
 ## Meal plan + phone exports
 
 `lidl-mealplan` turns the on-sale healthy picks into three meals
-(breakfast / lunch / dinner — each built around protein + complex carb + veg
+(breakfast / lunch / dinner, each built around protein + complex carb + veg
 or fruit, preferring the best-scoring discounted item per slot) plus a
 deduplicated shopping list. It's also run automatically at the end of every
 `lidl-summary`.
@@ -99,18 +99,18 @@ lidl-mealplan --min-score 6   # raise the health bar for eligible items
 lidl-mealplan --no-image      # Markdown + checklist only (skip the PNG)
 ```
 
-Two flavours: `--mode sale` (default) plans from **discounted** picks — what's
-worth acting on this week — while `--mode best` ignores price and plans from the
+Two flavours: `--mode sale` (default) plans from **discounted** picks (what's
+worth acting on this week), while `--mode best` ignores price and plans from the
 **highest-scoring** items. The `-best` plans are written with a `-best` suffix so
 they sit alongside the on-sale ones.
 
 It writes three phone-friendly exports into `summaries/`:
 
-- `meal-plan-<date>.md` — the plan + shopping list as Markdown
-- `meal-plan-<date>.png` — a shareable **image card** in the Lidl palette
-  (rendered by screenshotting a branded HTML card with Playwright — no extra
-  dependency)
-- `shopping-list-<date>.txt` — a plain-text `[ ]` checklist to copy onto a phone
+- `meal-plan-<date>.md`: the plan + shopping list as Markdown
+- `meal-plan-<date>.png`: a shareable **image card** in the Lidl palette
+  (rendered by screenshotting a branded HTML card with Playwright, so it needs
+  no extra dependency)
+- `shopping-list-<date>.txt`: a plain-text `[ ]` checklist to copy onto a phone
 
 ### Schedule it (daily, user systemd)
 
@@ -126,31 +126,31 @@ The timer runs `lidl-summary --top 25` daily (`OnCalendar=*-*-* 08:00:00`,
 
 ## Scoring
 
-Each product gets a **health score** (≈0–15) from a transparent heuristic over
+Each product gets a **health score** (≈0-15) from a transparent heuristic over
 its name, scraped category, and price:
 
 | Role | Examples | Value |
 |------|----------|-------|
-| Protein | Chicken, turkey, salmon, tuna, eggs, cottage cheese, skyr, kashkaval, Greek yogurt | 4–9 |
-| Complex carbs | Oats, lentils, quinoa, beans, chickpeas, sweet potato, brown rice | 4–8 |
-| Healthy fats | Avocado, olive oil, nuts, tahini, chia, peanut butter | 5–8 |
-| Vegetables | Broccoli, spinach, kale, peppers, tomatoes, zucchini, mushrooms | 4–8 |
-| Fruit | Berries, banana, apple, citrus, kiwi | 5–7 |
+| Protein | Chicken, turkey, salmon, tuna, eggs, cottage cheese, skyr, kashkaval, Greek yogurt | 4-9 |
+| Complex carbs | Oats, lentils, quinoa, beans, chickpeas, sweet potato, brown rice | 4-8 |
+| Healthy fats | Avocado, olive oil, nuts, tahini, chia, peanut butter | 5-8 |
+| Vegetables | Broccoli, spinach, kale, peppers, tomatoes, zucchini, mushrooms | 4-8 |
+| Fruit | Berries, banana, apple, citrus, kiwi | 5-7 |
 
 How the score is built (a rewrite of the original additive-keyword version):
 
-- **Word-boundary stem matching** — inflected forms match (`ориз` → `оризови`)
+- **Word-boundary stem matching**: inflected forms match (`ориз` → `оризови`)
   but a stem can't match mid-word, so `ориз` (rice) no longer tags `чоризо`
   (chorizo) as a carb.
-- **Best role, not a sum** — the score is the best single thing about an item,
+- **Best role, not a sum**: the score is the best single thing about an item,
   not a pile of keywords, so a dessert bar can't out-score chicken and a
   "chicken fillet" isn't double-counted.
-- **Category prior** — an unmatched item in *Fresh meat* is seeded as protein
+- **Category prior**: an unmatched item in *Fresh meat* is seeded as protein
   (rescuing ~half the catalogue that the name alone missed), while anything in
   *Snacks & sweets* is blocked from counting as real food.
-- **Sugar-free guard** — `без захар` grants a small quality bonus instead of
+- **Sugar-free guard**: `без захар` grants a small quality bonus instead of
   triggering the `захар` (sugar) penalty.
-- **`value` = health per €** — a price signal used only as a tiebreaker; price
+- **`value` = health per €**: a price signal used only as a tiebreaker; price
   never makes a food unhealthy.
 
 Junk, alcohol, sugary drinks, and processed/deli items take penalties and have
@@ -158,7 +158,9 @@ their healthy-role tags stripped so the meal planner won't pick them.
 
 ## Tech Stack
 
-- **Playwright** — headless Chromium for scraping the JS-rendered Lidl site
-- **Flask** — lightweight web server and API
-- **Rich** — terminal UI for the CLI
-- **Vanilla JS/CSS** — no frontend framework needed
+- **Playwright**: headless Chromium for scraping the JS-rendered Lidl site
+- **Flask**: lightweight web server and API
+- **Rich**: terminal UI for the CLI
+- **Vanilla JS/CSS**: the UI needs no frontend framework
+
+*Note: this scraper is for personal and educational use and reads only lidl.bg's public offer pages.*
