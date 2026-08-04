@@ -1,5 +1,7 @@
 # Little Lidl List
 
+<img src="icon.svg" width="96" align="right" alt="Little Lidl List logo">
+
 Scan Lidl Bulgaria's weekly offers and find the best items for a training-focused diet. Automatically scrapes [lidl.bg](https://www.lidl.bg), scores products by nutritional value, and displays results in a visual web interface.
 
 ![Screenshot](screenshot.png)
